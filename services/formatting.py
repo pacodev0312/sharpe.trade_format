@@ -14,6 +14,8 @@ import numpy as np
 import traceback
 # endregion
 
+batch = []
+
 # region declaration TickFomatting
 load_dotenv()
 class TickFomatting:
@@ -69,15 +71,16 @@ class TickFomatting:
 
     def neighboring_ticks(self, datas):
         self.session = Session()  # Initialize the session once
-        batch = []
-        for row in datas:
-            prev_tick = self.cache_pts.get(row["symbol"], None)
-            ct = self.create_tick(row, prev_tick)
-            if ct:
-                batch.append(ct)
-        if batch:  # Commit any remaining ticks
+        
+        global batch
+        prev_tick = self.cache_pts.get(datas["symbol"], None)
+        ct = self.create_tick(datas, prev_tick)
+        if ct:
+            batch.append(ct)
+        if len(batch) == 700:  # Commit any remaining ticks
             self.session.bulk_save_objects(batch)
             self.session.commit()
+            batch = []
         self.check_second(datas)
         self.session.close()
             
@@ -215,9 +218,9 @@ class TickFomatting:
     
     def check_second(self, datas):
         try:
-            target_tmp = datas[0]["timestamp"]
+            target_tmp = datas["timestamp"]
             time = dt.strptime(target_tmp, "%Y-%m-%dT%H:%M:%S")
-            if time.second == 0:
+            if time.second == 59:
                 print(f"Check the second of timestamp {target_tmp}")
                 one_min_thread = threading.Thread(target=self.create_minute_filtering_tick, args=(self.cache_pfts_one_min,))
                 one_min_thread.start()
