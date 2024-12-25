@@ -60,3 +60,10 @@ def convert_nan_ticksize(value, field=""):
     except Exception as ex:
         print(f"utils/functions/convert_nan_ticksize Error {field}: {ex}")
         return None
+    
+def convert_to_dict(raw):
+    return {
+        key: (value.isoformat() if isinstance(value, dt) else value)
+        for key, value in raw.__dict__.items()
+        if not key.startswith("_")
+    }
