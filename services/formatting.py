@@ -1,10 +1,11 @@
 # region import dependencies
 from services.db_connection import FFRawTrade, FFFilterTick, Session, OneMinFilteringTick
 from services.masterfile import MasterSymbol, cache_symbol_id
+from services.kafk_service import produce_message
 from datetime import datetime as dt
 from typing import Optional, List
 from dotenv import load_dotenv
-from utils.functions import convert_nan_date, convert_nan_int, convert_nan_string
+from utils.functions import convert_nan_date, convert_nan_int, convert_nan_string, convert_to_dict
 import os
 import logging
             
@@ -12,6 +13,7 @@ import threading
 import pandas as pd
 import numpy as np
 import traceback
+import json
 # endregion
 
 batch = []
@@ -77,6 +79,7 @@ class TickFomatting:
         ct = self.create_tick(datas, prev_tick)
         if ct:
             batch.append(ct)
+            produce_message(topic_name="feed_tick_trade_format", key=ct.symbol, message=json.dumps(convert_to_dict(ct)))
         if len(batch) == 700:  # Commit any remaining ticks
             self.session.bulk_save_objects(batch)
             self.session.commit()

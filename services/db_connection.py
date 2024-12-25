@@ -96,7 +96,7 @@ class FFFilterTick(Base):
     delta_volume_value=Column(Double, nullable=True)
     # updated
     buy_volume=Column(BIGINT, nullable=True)
-    buy_value = Column(Integer, nullable=True)
+    buy_value = Column(Double, nullable=True)
     sell_volume=Column(BIGINT, nullable=True)
     sell_value=Column(BIGINT, nullable=True)
     #
@@ -157,6 +157,11 @@ class FFFilterTick(Base):
     oi_build_up=Column(String, nullable=True)
     sentiment=Column(String, nullable=True)
     tick_seq=Column(Integer, nullable=False)
+    
+    __table_args__ = (
+        Index('format_idx_symbol_timestamp_tickseq', 'symbol', 'timestamp', 'tick_seq', postgresql_using='btree'),
+    )
+    
     """for one minute tick"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
